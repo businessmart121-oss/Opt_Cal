@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Option Position Calculator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-0:#080B10;
+    --bg-1:#0E141C;
+    --bg-panel:#121A24;
+    --bg-field:#0B1119;
+    --border:#212B38;
+    --border-soft:#1A222D;
+    --text-hi:#EAF0F7;
+    --text-mid:#9FADC0;
+    --text-low:#6B7789;
+    --gold:#E3B34C;
+    --gold-dim:#8A6E2E;
+    --green:#3ADD8D;
+    --green-dim:#1E4A34;
+    --red:#FF6161;
+    --red-dim:#4A2020;
+    --on-gold:#1A1406;
+    font-size:16px;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg-0:#F2F5F9;--bg-1:#FFFFFF;--bg-panel:#FFFFFF;--bg-field:#F1F4F8;
+      --border:#D9E0E8;--border-soft:#E6EBF1;
+      --text-hi:#111827;--text-mid:#4B5563;--text-low:#6B7280;
+      --gold:#A87A12;--gold-dim:#D9B35A;--green:#15803D;--green-dim:#BBE5CB;
+      --red:#C62828;--red-dim:#F5C6C6;--on-gold:#FFFFFF;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg-0:#F2F5F9;--bg-1:#FFFFFF;--bg-panel:#FFFFFF;--bg-field:#F1F4F8;
+    --border:#D9E0E8;--border-soft:#E6EBF1;
+    --text-hi:#111827;--text-mid:#4B5563;--text-low:#6B7280;
+    --gold:#A87A12;--gold-dim:#D9B35A;--green:#15803D;--green-dim:#BBE5CB;
+    --red:#C62828;--red-dim:#F5C6C6;--on-gold:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 500px at 15% -10%, rgba(227,179,76,0.06), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(58,221,141,0.05), transparent 55%),
+      var(--bg-0);
+    color:var(--text-hi);
+    font-family:'Inter',sans-serif;
+    padding:calc(32px + env(safe-area-inset-top,0px)) 20px calc(60px + env(safe-area-inset-bottom,0px));
+    min-height:100vh;
+  }
+  .wrap{max-width:960px;margin:0 auto;}
+
+  /* header */
+  .ticker{
+    display:flex;align-items:center;gap:10px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;letter-spacing:.12em;color:var(--gold);
+    text-transform:uppercase;margin-bottom:14px;
+  }
+  .ticker::before{content:"●";color:var(--green);font-size:9px;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:clamp(28px,4vw,38px);
+    font-weight:700;margin:0 0 6px;
+    letter-spacing:-0.01em;
+  }
+  .sub{color:var(--text-mid);font-size:14.5px;margin-bottom:26px;line-height:1.5;}
+
+  /* tabs */
+  .tabs{display:flex;gap:2px;margin-bottom:22px;background:var(--bg-1);
+    border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;}
+  .tab{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;
+    padding:9px 20px;border-radius:7px;cursor:pointer;color:var(--text-mid);
+    transition:all .18s ease;user-select:none;
+  }
+  .tab.active{background:var(--gold);color:var(--on-gold);}
+  .tab:not(.active):hover{color:var(--text-hi);}
+
+  /* grid */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media (max-width:760px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:linear-gradient(180deg,var(--bg-panel),var(--bg-1));
+    border:1px solid var(--border);border-radius:14px;padding:22px 22px 10px;
+  }
+  .panel-title{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--text-low);
+    margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border-soft);
+  }
+
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;font-size:12.5px;color:var(--text-mid);margin-bottom:6px;
+    font-weight:500;
+  }
+  .field .unit-input{position:relative;}
+  .field input, .field .static{
+    width:100%;background:var(--bg-field);border:1px solid var(--border);
+    color:var(--text-hi);border-radius:8px;padding:10px 12px;
+    font-family:'IBM Plex Mono',monospace;font-size:15px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .field input:focus{outline:none;border-color:var(--gold-dim);box-shadow:0 0 0 3px rgba(227,179,76,0.12);}
+  .field .static{color:var(--text-mid);}
+  .prefix{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-low);font-family:'IBM Plex Mono',monospace;font-size:15px;pointer-events:none;}
+  .prefix ~ input{padding-left:24px;}
+
+  .row{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:11px 0;border-bottom:1px solid var(--border-soft);
+  }
+  .row:last-child{border-bottom:none;}
+  .row .k{font-size:13.5px;color:var(--text-mid);}
+  .row .v{font-family:'IBM Plex Mono',monospace;font-size:15.5px;font-weight:600;color:var(--text-hi);}
+  .row .v.pos{color:var(--green);}
+  .row .v.neg{color:var(--red);}
+  .row.hl{
+    background:rgba(227,179,76,0.06);margin:2px -14px;padding:11px 14px;
+    border-radius:8px;border-bottom:none;
+  }
+  .row.hl .k{color:var(--gold);font-weight:500;}
+  .row.hl .v{color:var(--gold);font-size:17px;}
+
+  /* gauge */
+  .gauge-panel{grid-column:1/-1;margin-top:4px;}
+  .gauge{position:relative;height:100px;margin:14px 4px 4px;}
+  .gauge-track{position:absolute;top:47px;left:0;right:0;height:6px;border-radius:4px;
+    background:linear-gradient(90deg,var(--red-dim),var(--border) 45%,var(--green-dim));}
+  .gauge-marker{position:absolute;top:43px;transform:translateX(-50%);text-align:center;width:90px;}
+  .gauge-marker.above{top:auto;bottom:45px;}
+  .gauge-marker .dot{width:12px;height:12px;border-radius:50%;margin:0 auto 6px;border:2px solid var(--bg-0);}
+  .gauge-marker .lbl{font-size:11px;color:var(--text-low);font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+  .gauge-marker .val{font-size:12.5px;color:var(--text-hi);font-family:'IBM Plex Mono',monospace;font-weight:600;}
+
+  footer{margin-top:28px;color:var(--text-low);font-size:12px;text-align:center;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="ticker">Live position model</div>
+  <h1>Option Position Calculator</h1>
+  <div class="sub">Enter your trade details — the math updates as you type. Toggle between a cash-secured short put and a covered call.</div>
+
+  <div class="tabs">
+    <div class="tab active" data-mode="put">Short Put</div>
+    <div class="tab" data-mode="call">Covered Call</div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="panel-title">Trade inputs</div>
+      <div class="field">
+        <label>Today's date</label>
+        <div class="static" id="todayDisplay">—</div>
+      </div>
+      <div class="field">
+        <label>Expiry date</label>
+        <input type="date" id="expiry">
+      </div>
+      <div class="field">
+        <label id="stockLabel">Stock price</label>
+        <div class="unit-input"><span class="prefix">$</span><input type="number" id="stock" step="0.01" value="18.00"></div>
+      </div>
+      <div class="field">
+        <label>Strike price</label>
+        <div class="unit-input"><span class="prefix">$</span><input type="number" id="strike" step="0.01" value="18.00"></div>
+      </div>
+      <div class="field">
+        <label>Option price (premium)</label>
+        <div class="unit-input"><span class="prefix">$</span><input type="number" id="premium" step="0.01" value="1.24"></div>
+      </div>
+      <div class="field">
+        <label>Number of contracts</label>
+        <input type="number" id="contracts" step="1" min="1" value="1">
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title" id="outTitle">Position outcome</div>
+      <div class="row"><span class="k">Days to expiry</span><span class="v" id="outDays">—</span></div>
+      <div class="row"><span class="k">Total premium</span><span class="v" id="outPremium">—</span></div>
+      <div class="row"><span class="k">Break even</span><span class="v" id="outBE">—</span></div>
+      <div class="row"><span class="k">Time value</span><span class="v" id="outTV">—</span></div>
+      <div class="row"><span class="k" id="outPctLabel">% decrease to break even</span><span class="v" id="outPct">—</span></div>
+      <div class="row hl"><span class="k">Return if expired</span><span class="v" id="outRet">—</span></div>
+      <div class="row hl"><span class="k">Return p.a.</span><span class="v" id="outRetPA">—</span></div>
+      <div class="row"><span class="k">Maximum loss</span><span class="v" id="outMaxLoss">—</span></div>
+      <div class="row"><span class="k">Maximum gain</span><span class="v" id="outMaxGain">—</span></div>
+    </div>
+
+    <div class="panel gauge-panel">
+      <div class="panel-title">Where price sits</div>
+      <div class="gauge">
+        <div class="gauge-track"></div>
+        <div class="gauge-marker" id="markBE" style="left:20%;">
+          <div class="dot" style="background:var(--red);border-color:var(--red);"></div>
+          <div class="lbl">BREAK EVEN</div>
+          <div class="val" id="markBEval">—</div>
+        </div>
+        <div class="gauge-marker" id="markStrike" style="left:50%;">
+          <div class="dot" style="background:var(--text-low);border-color:var(--text-low);"></div>
+          <div class="lbl">STRIKE</div>
+          <div class="val" id="markStrikeVal">—</div>
+        </div>
+        <div class="gauge-marker above" id="markStock" style="left:80%;">
+          <div class="val" id="markStockVal">—</div>
+          <div class="lbl">STOCK NOW</div>
+          <div class="dot" style="background:var(--gold);border-color:var(--gold);margin:6px auto 0;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Educational estimate only — not investment advice. Assumes 100 shares per contract and premiums quoted per share.</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let mode = 'put';
+
+// today's date, fixed at load
+const today = new Date();
+today.setHours(0,0,0,0);
+$('todayDisplay').textContent = today.toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric'});
+
+// default expiry = today + 45 days
+const defaultExpiry = new Date(today);
+defaultExpiry.setDate(defaultExpiry.getDate() + 45);
+$('expiry').value = defaultExpiry.getFullYear()+'-'+String(defaultExpiry.getMonth()+1).padStart(2,'0')+'-'+String(defaultExpiry.getDate()).padStart(2,'0');
+
+const fmtUSD = n => (n<0? '-$'+Math.abs(n).toFixed(2) : '$'+n.toFixed(2));
+const fmtPct = n => (n>=0?'':'') + n.toFixed(2) + '%';
+
+function setTab(m){
+  mode = m;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.mode===m));
+  $('stockLabel').textContent = 'Stock price';
+  $('outTitle').textContent = m==='put' ? 'Short put outcome' : 'Covered call outcome';
+  $('outPctLabel').textContent = m==='put' ? '% decrease to break even' : '% cushion to break even';
+  calc();
+}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click', ()=>setTab(t.dataset.mode)));
+
+function calc(){
+  const expiryStr = $('expiry').value;
+  const stock = parseFloat($('stock').value)||0;
+  const strike = parseFloat($('strike').value)||0;
+  const premium = parseFloat($('premium').value)||0;
+  const contracts = parseInt($('contracts').value)||0;
+  const shares = contracts*100;
+
+  let days = 0;
+  if(expiryStr){
+    const exp = new Date(expiryStr+'T00:00:00');
+    days = Math.round((exp-today)/86400000) + 1;
+    if(days<0) days = 0;
+  }
+
+  const totalPremium = premium*shares;
+
+  let breakEven, intrinsic, maxLoss, maxGain, pctToBE, retIfExpired;
+
+  if(mode==='put'){
+    breakEven = strike - premium;
+    intrinsic = Math.max(strike-stock,0);
+    maxLoss = (strike-premium)*shares;
+    maxGain = totalPremium;
+    pctToBE = stock!==0 ? (breakEven-stock)/stock*100 : 0;
+    const capitalAtRisk = strike*shares - totalPremium;
+    retIfExpired = capitalAtRisk!==0 ? (totalPremium/capitalAtRisk*100) : 0;
+  } else {
+    breakEven = stock - premium;
+    intrinsic = Math.max(stock-strike,0);
+    maxGain = (strike-stock)*shares + totalPremium;
+    maxLoss = stock*shares - totalPremium;
+    pctToBE = stock!==0 ? (breakEven-stock)/stock*100 : 0;
+    const capitalAtRisk = stock*shares - totalPremium;
+    retIfExpired = capitalAtRisk!==0 ? (maxGain/capitalAtRisk*100) : 0;
+  }
+  const timeValue = premium - intrinsic;
+  const retPA = days>0 ? retIfExpired*(365/days) : 0;
+
+  $('outDays').textContent = days + (days===1?' day':' days');
+  $('outPremium').textContent = fmtUSD(totalPremium);
+  $('outBE').textContent = fmtUSD(breakEven);
+  $('outTV').textContent = fmtUSD(timeValue);
+  const pctEl = $('outPct'); pctEl.textContent = fmtPct(pctToBE);
+  pctEl.className = 'v ' + (pctToBE>=0?'pos':'neg');
+  const retEl = $('outRet'); retEl.textContent = fmtPct(retIfExpired);
+  const retPAEl = $('outRetPA'); retPAEl.textContent = fmtPct(retPA);
+  const maxLossEl = $('outMaxLoss'); maxLossEl.textContent = fmtUSD(-Math.abs(maxLoss)); maxLossEl.className='v neg';
+  const maxGainEl = $('outMaxGain'); maxGainEl.textContent = fmtUSD(maxGain); maxGainEl.className='v pos';
+
+  // gauge: position BE, Strike, Stock along a scaled line
+  const vals = [breakEven, strike, stock];
+  const lo = Math.min(...vals), hi = Math.max(...vals);
+  const span = (hi-lo) || 1;
+  const pad = span*0.35;
+  const scaleMin = lo-pad, scaleMax = hi+pad;
+  const pos = v => ((v-scaleMin)/(scaleMax-scaleMin))*100;
+
+  $('markBE').style.left = pos(breakEven)+'%';
+  $('markStrike').style.left = pos(strike)+'%';
+  $('markStock').style.left = pos(stock)+'%';
+  $('markBEval').textContent = fmtUSD(breakEven);
+  $('markStrikeVal').textContent = fmtUSD(strike);
+  $('markStockVal').textContent = fmtUSD(stock);
+}
+
+['expiry','stock','strike','premium','contracts'].forEach(id=>{
+  $(id).addEventListener('input', calc);
+});
+
+calc();
+</script>
+</body>
+</html>
